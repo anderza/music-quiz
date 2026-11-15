@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.anderza.musicquiz'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.anderza.musicquiz'
+        minSdk 24
+        targetSdk 34
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as int)
+        versionName "1.0.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
+    }
+
+    // Ключ лежит в репозитории, чтобы каждая новая сборка ставилась поверх старой.
+    // Для публикации в Google Play замените его на свой и храните пароли в секретах.
+    signingConfigs {
+        shared {
+            storeFile file('musicquiz.keystore')
+            storePassword 'musicquiz'
+            keyAlias 'musicquiz'
+            keyPassword 'musicquiz'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.shared
+        }
+        debug {
+            signingConfig signingConfigs.shared
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// Игра хранится одним файлом web/index.html — копируем его в assets перед сборкой.
+def copyWeb = tasks.register('copyWeb', Copy) {
+    from(rootProject.file('web/index.html'))
+    into(layout.projectDirectory.dir('src/main/assets'))
+}
+tasks.named('preBuild') { dependsOn copyWeb }
